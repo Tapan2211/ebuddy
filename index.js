@@ -13,6 +13,7 @@ const subCategoriesRoutes = require('./routes/subCategories.route');
 const productRoutes = require('./routes/product.route');
 const cartRoutes = require('./routes/cart.route');
 const addressRoutes = require('./routes/address.route');
+const wishListRoutes = require('./routes/wishList.route');
 
 const app = express();
 app.use(cors({
@@ -31,6 +32,7 @@ app.use('/api/v1', subCategoriesRoutes);
 app.use('/api/v1', productRoutes);
 app.use('/api/v1', cartRoutes);
 app.use('/api/v1', addressRoutes);
+app.use('/api/v1', wishListRoutes);
 
 const PORT = process.env.PORT || 8082;
 console.log(`Server starting on port: ${PORT}`);
