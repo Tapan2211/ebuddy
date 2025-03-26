@@ -1,19 +1,5 @@
 const db = require('../config/db');
 
-// const addToCart = async (user_id, product_id, quantity = 1) => {
-
-//     if (!user_id || !product_id) {
-//         throw new Error("User ID and Product ID are required");
-//     }
-
-//     const cartQuantity = quantity ? Number(quantity) : 1;
-
-//     const query = `INSERT INTO cart (user_id, product_id, quantity) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE quantity = quantity + ?`;
-//     const value = [user_id, product_id, cartQuantity, cartQuantity];
-//     const [results] = await db.execute(query, value);
-//     return results;
-// }
-
 const addToCart = async (user_id, product_id, quantity = 1) => {
     if (!user_id || !product_id) {
         throw new Error("User ID and Product ID are required");
