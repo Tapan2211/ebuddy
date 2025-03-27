@@ -16,9 +16,19 @@ const addWishlistItem = async (wishlist) => {
 }
 
 const getWishlistByUserId = async (user_id) => {
-    const query = `SELECT w.*, p.product_name, p.product_original_price, p.product_image, p.product_discount_percentage FROM wishlist w 
-                   JOIN products p ON w.product_id = p.product_id 
-                   WHERE w.user_id = ?`;
+    const query = `
+        SELECT w.*, 
+               p.product_name, 
+               p.product_original_price, 
+               p.product_image, 
+               p.product_discount_percentage,
+               subcategories.subcategoryName, 
+               categories.categoryName
+        FROM wishlist w
+        JOIN products p ON w.product_id = p.product_id
+        LEFT JOIN subcategories ON p.subcategory_id = subcategories.subcategoryId
+        LEFT JOIN categories ON subcategories.categoryId = categories.id
+        WHERE w.user_id = ?`;
     const [rows] = await db.execute(query, [user_id]);
     return rows;
 }

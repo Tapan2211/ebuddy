@@ -13,19 +13,40 @@ const createSubCategory = async (data) => {
 };
 
 const getAllSubcategories = async () => {
-    const query = "SELECT * FROM subcategories";
+    // const query = "SELECT * FROM subcategories";
+    const query = `
+        SELECT 
+            subcategories.*, 
+            categories.categoryName 
+        FROM subcategories 
+        INNER JOIN categories ON subcategories.categoryId = categories.id
+    `;
     const [rows] = await db.execute(query); // Extract only the result set
     return rows;
 }
 
 const getSubcategoriesByCategoryId = async (subcategoryId) => {
-    const query = "SELECT * FROM subcategories WHERE subcategoryId = ?";
+    // const query = "SELECT * FROM subcategories WHERE subcategoryId = ?";
+    const query = `
+        SELECT 
+            subcategories.*, 
+            categories.categoryName 
+        FROM subcategories 
+        INNER JOIN categories ON subcategories.categoryId = categories.id 
+        WHERE subcategories.subcategoryId = ?`;
     const [rows] = await db.execute(query, [subcategoryId]); // ✅ Extract the first element
     return rows.length > 0 ? rows[0] : null;
 }
 
 const getSubcategoriesByCategory = async (categoryId) => {
-    const query = "SELECT * FROM subcategories WHERE categoryId =?";
+    // const query = "SELECT * FROM subcategories WHERE categoryId =?";
+    const query = `
+        SELECT 
+            subcategories.*, 
+            categories.categoryName 
+        FROM subcategories 
+        INNER JOIN categories ON subcategories.categoryId = categories.id 
+        WHERE subcategories.categoryId = ?`;
     const [rows] = await db.execute(query, [categoryId]);
     return rows;
 }

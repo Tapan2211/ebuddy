@@ -1,45 +1,5 @@
 const db = require('../config/db');
 
-// const createProduct = async (data) => {
-//     const {
-//         subcategoryId,
-//         productName,
-//         productBrandName,
-//         productImage,
-//         productDescription,
-//         productColor,
-//         productQuantity,
-//         productOriginalPrice,
-//         productDiscountPercentage,
-//         productSize
-//     } = data;
-
-//     const query = `
-//         INSERT INTO products 
-//         (subcategory_id, product_name, product_brand_name, product_image, product_description, product_color, product_quantity, product_original_price, product_discount_percentage, product_size) 
-//         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
-
-//     try {
-//         const [results] = await db.execute(query, [
-//             subcategoryId || null,
-//             productName || null,
-//             productBrandName || null,
-//             productImage || null,
-//             productDescription || null,
-//             JSON.stringify(productColor || []),  // Convert to JSON (ensure it's always valid)
-//             productQuantity || 0,  // Default to 0 if undefined
-//             productOriginalPrice || 0.0,  // Default to 0.0 if undefined
-//             productDiscountPercentage || 0.0,  // Default to 0.0 if undefined
-//             JSON.stringify(productSize || []) // Convert to JSON (ensure it's always valid)
-//         ]);
-
-//         return results;
-//     } catch (error) {
-//         console.error("SQL Error:", error);
-//         throw error;
-//     }
-// };
-
 const createProduct = async (data) => {
     const {
         subcategoryId,
@@ -95,18 +55,28 @@ const createProduct = async (data) => {
 };
 
 const getAllProducts = async () => {
-    const query = 'SELECT * FROM products';
+    // const query = 'SELECT * FROM products';
+    const query = `
+        SELECT p.*, s.subcategoryName 
+        FROM products p
+        LEFT JOIN subcategories s ON p.subcategory_id = s.subcategoryId`;
+
     const [results] = await db.execute(query);
     return results.map(product => ({
         ...product,
+        subcategory_name: product.subcategoryName,
         product_color: JSON.parse(product.product_color || '[]'),
         product_size: JSON.parse(product.product_size || '[]')
     }));
 }
 
 const getProductById = async (id) => {
-    console.log("MODLE_ID", id)
-    const query = 'SELECT * FROM products WHERE product_id =?';
+    // const query = 'SELECT * FROM products WHERE product_id =?';
+    const query = `
+        SELECT p.*, s.subcategoryName 
+        FROM products p
+        LEFT JOIN subcategories s ON p.subcategory_id = s.subcategoryId
+        WHERE p.product_id = ?`;
     const [results] = await db.execute(query, [id]);
 
     if (results.length === 0) {
@@ -122,7 +92,12 @@ const getProductById = async (id) => {
 }
 
 const getProductBySubCategoryId = async (subcategoryId) => {
-    const query = 'SELECT * FROM products WHERE subcategory_id =?';
+    // const query = 'SELECT * FROM products WHERE subcategory_id =?';
+    const query = `
+    SELECT p.*, s.subcategoryName 
+    FROM products p
+    LEFT JOIN subcategories s ON p.subcategory_id = s.subcategoryId
+    WHERE p.subcategory_id = ?`;
     const [results] = await db.execute(query, [subcategoryId]);
     return results.map(product => ({
         ...product,
@@ -140,7 +115,7 @@ const updateProductById = async (id, productData) => {
 
     const {
         product_name = null,
-        product_image = null,  // ✅ Updated to store correct image URL
+        product_image = null,
         product_brand_name = null,
         product_description = null,
         product_color = [],
@@ -155,7 +130,6 @@ const updateProductById = async (id, productData) => {
     const productColorJson = JSON.stringify(product_color);
     const productSizeJson = JSON.stringify(product_size);
 
-    // ✅ Exclude `product_final_price` (auto-calculated by MySQL)
     const query = `
         UPDATE products 
         SET product_name = ?, product_image = ?, product_brand_name = ?, 
@@ -166,7 +140,7 @@ const updateProductById = async (id, productData) => {
 
     const values = [
         product_name,
-        product_image,  // ✅ Stores new image URL if updated
+        product_image,
         product_brand_name,
         product_description,
         productColorJson,
@@ -178,16 +152,15 @@ const updateProductById = async (id, productData) => {
         id
     ];
 
-    console.log("SQL Query Values:", values); // Debugging log
+    console.log("SQL Query Values:", values);
 
     const [result] = await db.execute(query, values);
 
-    // ✅ Ensure update was successful
     if (result.affectedRows === 0) {
         return null;
     }
 
-    return getProductById(id);; // Indicate success
+    return getProductById(id);
 };
 
 const deleteProductById = async (id) => {

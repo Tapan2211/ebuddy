@@ -27,21 +27,28 @@ const addToCart = async (user_id, product_id, quantity = 1) => {
     return productResults[0]; // Return product details
 };
 
-
-
 const getCartItems = async (user_id) => {
-    const query = `SELECT cart.cart_id, cart.product_id, cart.quantity,
-    products.product_name, products.product_image, products.product_original_price,
-    products.product_discount_percentage, products.product_final_price
-    FROM cart 
-    JOIN products ON cart.product_id = products.product_id
-    WHERE cart.user_id =?`;
+    const query = `
+        SELECT cart.cart_id, cart.product_id, cart.quantity,
+               products.product_name, products.product_image, 
+               products.product_original_price, products.product_discount_percentage, 
+               products.product_final_price, 
+               subcategories.subcategoryName, categories.categoryName
+        FROM cart 
+        JOIN products ON cart.product_id = products.product_id
+        LEFT JOIN subcategories ON products.subcategory_id = subcategories.subcategoryId
+        LEFT JOIN categories ON subcategories.categoryId = categories.id
+        WHERE cart.user_id = ?`;
+
     const [results] = await db.execute(query, [user_id]);
+
     return results.map(product => ({
         ...product,
-        product_final_price: parseFloat(product.product_final_price)
+        product_final_price: parseFloat(product.product_final_price),
+        subcategoryName: product.subcategoryName || "N/A",  // ✅ Handle NULL values
+        categoryName: product.categoryName || "N/A" // ✅ Handle NULL values
     }));
-}
+};
 
 const removeFromCart = async (user_id, product_id) => {
     const query = 'DELETE FROM cart WHERE user_id =? AND product_id =?';
