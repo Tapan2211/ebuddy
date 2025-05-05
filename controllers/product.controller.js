@@ -1,123 +1,5 @@
 const productsService = require('../services/products.service');
 
-// const createProduct = async (req, res) => {
-//     try {
-//         console.log("Received Data:", req.body);  // Debugging log
-
-//         const { subcategory_id, product_name, product_brand_name,
-//             product_description, product_color, product_quantity, product_original_price,
-//             product_discount_percentage, product_size
-//         } = req.body;
-
-//         const product_image = req.file?.filename || null;  // Handle image upload
-
-//         // Check if any required field is undefined
-//         if (!subcategory_id || !product_name || !product_brand_name || !product_description || !product_color ||
-//             !product_quantity || !product_original_price || !product_discount_percentage || !product_size) {
-//             return res.status(400).json({ message: "All fields are required" });
-//         }
-
-//         // Construct image URL
-//         const baseUrl = `${req.protocol}://${req.get('host')}`;
-//         const imageUrl = product_image ? `${baseUrl}/uploads/${product_image}` : null;
-
-//         // Ensure all values are valid or NULL
-//         const product = {
-//             subcategory_id: subcategory_id || null,
-//             product_name: product_name || null,
-//             product_brand_name: product_brand_name || null,
-//             product_image: imageUrl || null,
-//             product_description: product_description || null,
-//             product_color: product_color || null,
-//             product_quantity: product_quantity || null,
-//             product_original_price: product_original_price || null,
-//             product_discount_percentage: product_discount_percentage || null,
-//             product_final_price: product_original_price && product_discount_percentage
-//                 ? product_original_price - (product_original_price * product_discount_percentage / 100)
-//                 : null,
-//             product_size: product_size || null
-//         };
-
-//         console.log("Product Data to Save:", product); // Debugging log
-
-//         // Call service function to save product
-//         const result = await productsService.createProduct(product);
-
-//         res.status(201).json({
-//             message: "Product created successfully",
-//             Product: product,
-//             id: result.insertId
-//         });
-
-//     } catch (error) {
-//         console.error("Error:", error);
-//         res.status(500).json({ message: error.message });
-//     }
-// };
-
-// const createProduct = async (req, res) => {
-//     try {
-//         console.log("Received Data:", req.body);  // Debugging log
-
-//         const {
-//             subcategory_id,  // Fix: Ensure this matches the model key
-//             product_name,
-//             product_brand_name,
-//             product_description,
-//             product_color,
-//             product_quantity,
-//             product_original_price,
-//             product_discount_percentage,
-//             product_size
-//         } = req.body;
-
-//         const product_image = req.file?.filename || null;  // Handle image upload safely
-
-//         // Check for missing fields
-//         if (!subcategory_id || !product_name || !product_brand_name || !product_description || !product_color ||
-//             !product_quantity || !product_original_price || !product_discount_percentage || !product_size) {
-//             return res.status(400).json({ message: "All fields are required" });
-//         }
-
-//         // Construct image URL
-//         const baseUrl = `${req.protocol}://${req.get('host')}`;
-//         const imageUrl = product_image ? `${baseUrl}/uploads/${product_image}` : null;
-
-//         // Calculate final price
-//         const product_final_price = product_original_price - (product_original_price * product_discount_percentage / 100);
-
-//         // Ensure all values are valid (not undefined)
-//         const product = {
-//             subcategoryId: subcategory_id || null,  // Fix: Convert key to match model
-//             productName: product_name || null,
-//             productBrandName: product_brand_name || null,
-//             productImage: imageUrl || null,
-//             productDescription: product_description || null,
-//             productColor: product_color || [], // Ensure it's an array
-//             productQuantity: product_quantity || 0,
-//             productOriginalPrice: product_original_price || 0.0,
-//             productDiscountPercentage: product_discount_percentage || 0.0,
-//             productSize: product_size || [] // Ensure it's an array
-//         };
-
-//         console.log("Product Data to Save:", product); // Debugging log
-
-//         // Call service function to save product
-//         const result = await productsService.createProduct(product);
-
-//         res.status(201).json({
-//             message: "Product created successfully",
-//             Product: product,
-//             id: result.insertId
-//         });
-
-//     } catch (error) {
-//         console.error("Error:", error);
-//         res.status(500).json({ message: error.message });
-//     }
-// };
-
-
 const createProduct = async (req, res) => {
     try {
         console.log("Received Data:", req.body);  // Debugging log
@@ -178,12 +60,32 @@ const createProduct = async (req, res) => {
 
 const getAllProducts = async (req, res) => {
     try {
-        const products = await productsService.getAllProducts();
+        let { page = 1, limit = 10 } = req.query;
+
+        page = parseInt(page, 10);
+        limit = parseInt(limit, 10);
+        if (isNaN(limit) || isNaN(page)) {
+            return res.status(400).json({ message: "Invalid page or limit value" });
+        }
+        const offset = (page - 1) * limit;
+        console.log("Controller - Page:", page, "Limit:", limit, "Offset:", offset); // Debug log
+
+        const { products, totalCount } = await productsService.getAllProducts(limit, offset);
         if (products.length === 0) {
             return res.status(404).json({ message: 'Products not found' });
         }
 
-        res.json({ message: 'Products data', products });
+        res.json({
+            message: 'Products data',
+            products,
+            pagination: {
+                totalProducts: totalCount,  // Fix: `total` should be `totalCount`
+                currentPage: page,
+                totalPages: Math.ceil(totalCount / limit),
+                limit,
+            },
+
+        });
     } catch (error) {
         res.status(500).json({ message: error.message })
     }
@@ -206,13 +108,24 @@ const getProductById = async (req, res) => {
 const getProductBySubCategoryId = async (req, res) => {
     try {
         const { id } = req.params;
-        console.log("subcategory_id", id)
-        const products = await productsService.getProductBySubCategoryId(id);
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const offset = (page - 1) * limit;
+
+        const { products, totalCount } = await productsService.getProductBySubCategoryId(id, limit, offset);
 
         if (products.length === 0) {
             return res.status(404).json({ message: 'Subcategory by id products not found' });
         }
-        res.json({ message: 'Products data', products });
+        res.json({
+            message: 'Products data',
+            products,
+            pagination: {
+                currentPage: page,
+                totalPages: Math.ceil(totalCount / limit),
+                totalItems: totalCount,
+            }
+        });
 
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -266,18 +179,6 @@ const updateProductById = async (req, res) => {
     }
 };
 
-
-
-
-// const updateProductById = async (req, res) => {
-//     try {
-//         const { id } = req.params;
-//         const productData = req.body;
-
-//     } catch (error) {
-//         res.status(500).json({ message: error.message });
-//     }
-// }
 
 const deleteProductById = async (req, res) => {
     try {

@@ -31,12 +31,25 @@ const addToCart = async (req, res) => {
 const getCartItems = async (req, res) => {
     try {
         const { user_id } = req.params;
-        console.log('user_id_get', user_id);
         if (!user_id) {
             return res.status(400).json({ message: 'User ID is required' });
         }
         const cartItems = await cartService.getCartItems(user_id);
-        res.status(200).json({ message: 'Cart items', cartItems });
+
+        let totalAmount = 0;
+        let totalItems = 0;
+
+        cartItems.forEach(item => {
+            totalAmount += item.product_final_price * item.quantity;
+            totalItems += item.quantity;
+        });
+
+        res.status(200).json({
+            message: 'Cart items',
+            cartItems,
+            totalAmount: totalAmount.toFixed(2),
+            totalItems
+        });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

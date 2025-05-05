@@ -70,8 +70,22 @@ const getUser = async (req, res) => {
 
 const getAllUsers = async (req, res) => {
     try {
-        const users = await userService.getAllUsers();
-        res.json(users);
+        let { page, limit } = req.query;
+        page = parseInt(page) || 1;
+        limit = parseInt(limit) || 10;
+
+        console.log("Page:", page, "Limit:", limit);
+
+
+        const { users, total } = await userService.getAllUsers(page, limit);
+        const totalPages = Math.ceil(total / limit);
+        res.json({
+            totalUsers: total,
+            page,
+            limit,
+            totalPages,
+            users
+        });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

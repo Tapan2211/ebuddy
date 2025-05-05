@@ -4,8 +4,9 @@ const createCategory = async (data) => {
     return await categoriesModel.createCategory(data);
 }
 
-const getAllCategories = async () => {
-    return await categoriesModel.getAllCategories();
+const getAllCategories = async (page = 1, limit = 10) => {
+    const offset = (page - 1) * limit;
+    return await categoriesModel.getAllCategories(limit, offset);
 }
 
 const getCategoryById = async (id) => {

@@ -8,8 +8,9 @@ const getUserByMail = async (email) => {
     return await userModel.getUserByMail(email);
 }
 
-const getAllUsers = async () => {
-    return await userModel.getAllUsers();
+const getAllUsers = async (page = 1, limit = 10) => {
+    const offset = (page - 1) * limit;
+    return await userModel.getAllUsers(limit, offset);
 }
 
 const getUserById = async (id) => {

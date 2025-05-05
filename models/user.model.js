@@ -6,7 +6,6 @@ const createUser = async (data) => {
         throw new Error('All fields are required');
     }
 
-    // ✅ Check if user already exists
     const [existingUser] = await db.execute('SELECT * FROM users WHERE email = ?', [email]);
     console.log("Existing User Check:", existingUser);
 
@@ -25,10 +24,23 @@ const getUserByMail = async (email) => {
     return results[0];
 }
 
-const getAllUsers = async () => {
-    const sql = 'SELECT * FROM users';
-    const [results] = await db.execute(sql);
-    return results;
+const getAllUsers = async (limit, offset) => {
+    // const countSql = 'SELECT * FROM users';
+
+    limit = parseInt(limit, 10);
+    offset = parseInt(offset, 10);
+
+    // Get total count of users
+    const countQuery = 'SELECT COUNT(*) AS total FROM users';
+    const [countResult] = await db.execute(countQuery);
+    const total = countResult[0].total;
+
+    // Fetch paginated users
+    const query = `SELECT * FROM users LIMIT ${limit} OFFSET ${offset}`;
+
+    const [results] = await db.execute(query);
+
+    return { users: results, total };
 }
 
 const getUserById = async (id) => {

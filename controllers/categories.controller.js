@@ -33,7 +33,12 @@ const createCategory = async (req, res) => {
 
 const getAllCagories = async (req, res) => {
     try {
-        const categories = await categoriesService.getAllCategories();
+        let { page, limit } = req.query;
+        page = parseInt(page) || 1;
+        limit = parseInt(limit) || 10;
+
+        const { categories, total } = await categoriesService.getAllCategories(page, limit);
+        const totalPages = Math.ceil(total / limit);
 
         if (categories.length === 0) {
             return res.status(404).json({ message: 'Categories not found' });
@@ -50,7 +55,13 @@ const getAllCagories = async (req, res) => {
             };
         });
 
-        res.status(200).json(categoryWithImageURL);
+        res.status(200).json({
+            totalCategories: total,
+            page,
+            limit,
+            totalPages,
+            categories: categoryWithImageURL
+        });
     } catch (error) {
         console.error("Error fetching categories:", error);
         res.status(500).json({ message: error.message });

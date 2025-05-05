@@ -27,21 +27,20 @@ const createProduct = async (data) => {
             productBrandName || null,
             productImage || null,
             productDescription || null,
-            JSON.stringify(productColor || []),  // Ensure JSON
+            JSON.stringify(productColor || []),
             productQuantity || 0,
             productOriginalPrice || 0.0,
             productDiscountPercentage || 0.0,
             JSON.stringify(productSize || [])
         ]);
 
-        // Get the inserted product including product_final_price
         const selectQuery = `SELECT * FROM products WHERE product_id = LAST_INSERT_ID()`;
         const [product] = await db.execute(selectQuery);
 
         if (product.length > 0) {
             const parsedProduct = {
                 ...product[0],
-                product_color: JSON.parse(product[0].product_color),  // Convert back to array
+                product_color: JSON.parse(product[0].product_color),
                 product_size: JSON.parse(product[0].product_size)  // Convert back to array
             };
             return parsedProduct;
@@ -54,21 +53,35 @@ const createProduct = async (data) => {
     }
 };
 
-const getAllProducts = async () => {
-    // const query = 'SELECT * FROM products';
+const getAllProducts = async (limit, offset) => {
     const query = `
         SELECT p.*, s.subcategoryName 
         FROM products p
-        LEFT JOIN subcategories s ON p.subcategory_id = s.subcategoryId`;
+        LEFT JOIN subcategories s ON p.subcategory_id = s.subcategoryId
+        LIMIT ${parseInt(limit, 10)} OFFSET ${parseInt(offset, 10)}`;
 
-    const [results] = await db.execute(query);
-    return results.map(product => ({
-        ...product,
-        subcategory_name: product.subcategoryName,
-        product_color: JSON.parse(product.product_color || '[]'),
-        product_size: JSON.parse(product.product_size || '[]')
-    }));
-}
+    const countQuery = `SELECT COUNT(*) AS totalCount FROM products`;
+
+    try {
+        const [results] = await db.execute(query);
+        const [countResult] = await db.execute(countQuery);
+
+        return {
+            products: results.map(product => ({
+                ...product,
+                subcategory_name: product.subcategoryName,
+                product_color: JSON.parse(product.product_color || '[]'),
+                product_size: JSON.parse(product.product_size || '[]')
+            })),
+            totalCount: countResult[0].totalCount
+        };
+
+    } catch (error) {
+        console.error("SQL Error:", error);
+        throw error;
+    }
+};
+
 
 const getProductById = async (id) => {
     // const query = 'SELECT * FROM products WHERE product_id =?';
@@ -91,20 +104,35 @@ const getProductById = async (id) => {
     };
 }
 
-const getProductBySubCategoryId = async (subcategoryId) => {
-    // const query = 'SELECT * FROM products WHERE subcategory_id =?';
+const getProductBySubCategoryId = async (subcategoryId, limit, offset) => {
     const query = `
-    SELECT p.*, s.subcategoryName 
-    FROM products p
-    LEFT JOIN subcategories s ON p.subcategory_id = s.subcategoryId
-    WHERE p.subcategory_id = ?`;
-    const [results] = await db.execute(query, [subcategoryId]);
-    return results.map(product => ({
-        ...product,
-        product_color: JSON.parse(product.product_color || '[]'),
-        product_size: JSON.parse(product.product_size || '[]')
-    }));
-}
+        SELECT p.*, s.subcategoryName 
+        FROM products p
+        LEFT JOIN subcategories s ON p.subcategory_id = s.subcategoryId
+        WHERE p.subcategory_id = ${parseInt(subcategoryId, 10)}
+        LIMIT ${parseInt(limit, 10)} OFFSET ${parseInt(offset, 10)}`;
+
+    const countQuery = `SELECT COUNT(*) AS totalCount FROM products WHERE subcategory_id = ${parseInt(subcategoryId, 10)}`;
+
+    try {
+
+        const [results] = await db.execute(query);
+        const [countResult] = await db.execute(countQuery);
+
+        return {
+            products: results.map(product => ({
+                ...product,
+                product_color: JSON.parse(product.product_color || '[]'),
+                product_size: JSON.parse(product.product_size || '[]')
+            })),
+            totalCount: countResult[0].totalCount
+        };
+
+    } catch (error) {
+        console.error("SQL Error:", error);
+        throw error;
+    }
+};
 
 const updateProductById = async (id, productData) => {
     console.log("Updating product with ID:", id, "Data:", productData);

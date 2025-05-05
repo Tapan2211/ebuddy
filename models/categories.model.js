@@ -11,10 +11,23 @@ const createCategory = async (data) => {
     return results;
 }
 
-const getAllCategories = async () => {
-    const sql = 'SELECT * FROM categories';
-    const [results] = await db.execute(sql);
-    return results;
+const getAllCategories = async (limit, offset) => {
+    // const sql = 'SELECT * FROM categories';
+    limit = parseInt(limit, 10);
+    offset = parseInt(offset, 10);
+
+    // Get total count of users
+    const countQuery = 'SELECT COUNT(*) AS total FROM categories';
+    const [countResult] = await db.execute(countQuery);
+    const total = countResult[0].total;
+
+    // Fetch paginated users
+    const query = `SELECT * FROM categories LIMIT ${limit} OFFSET ${offset}`;
+    console.log("Executing SQL:", query);
+
+    const [results] = await db.execute(query);
+
+    return { categories: results, total };
 }
 
 const getCategoryById = async (id) => {

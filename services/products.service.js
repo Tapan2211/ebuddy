@@ -4,16 +4,18 @@ const createProduct = async (data) => {
     return await productsModel.createProduct(data);
 }
 
-const getAllProducts = async () => {
-    return await productsModel.getAllProducts();
+const getAllProducts = async (limit, offset) => {
+    console.log("Limit:", limit, "Offset:", offset);
+    return await productsModel.getAllProducts(limit, offset);
 }
 
 const getProductById = async (id) => {
     return await productsModel.getProductById(id);
 }
 
-const getProductBySubCategoryId = async (categoryId) => {
-    return await productsModel.getProductBySubCategoryId(categoryId);
+const getProductBySubCategoryId = async (categoryId, limit, offset) => {
+    console.log("Category ID:", categoryId, "Limit:", limit, "Offset:", offset);
+    return await productsModel.getProductBySubCategoryId(categoryId, limit, offset);
 }
 
 const updateProductById = async (id, data) => {

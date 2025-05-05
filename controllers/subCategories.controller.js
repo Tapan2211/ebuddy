@@ -8,8 +8,6 @@ const createSubCategory = async (req, res) => {
         const { categoryId, subCategoryName } = req.body;
         const subcategoryImage = req.file?.filename || null;
 
-        console.log("✅ Received Data:", { categoryId, subCategoryName, subcategoryImage });
-
         if (!categoryId || !subCategoryName || !subcategoryImage) {
             return res.status(400).json({
                 message: "All fields are required",
