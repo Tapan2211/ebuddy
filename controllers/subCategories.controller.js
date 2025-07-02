@@ -2,8 +2,6 @@ const subCategoriesService = require('../services/subCategories.service');
 
 const createSubCategory = async (req, res) => {
     try {
-        console.log("📥 Request Body:", req.body);
-        console.log("🖼 Uploaded File:", req.file);
 
         const { categoryId, subCategoryName } = req.body;
         const subcategoryImage = req.file?.filename || null;
@@ -27,7 +25,7 @@ const createSubCategory = async (req, res) => {
             id: result.insertId
         });
     } catch (error) {
-        console.error("❌ Error creating subcategory:", error);
+        console.error("Error creating subcategory:", error);
         res.status(500).json({ message: error.message });
     }
 };

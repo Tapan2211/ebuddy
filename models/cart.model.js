@@ -45,8 +45,8 @@ const getCartItems = async (user_id) => {
     return results.map(product => ({
         ...product,
         product_final_price: parseFloat(product.product_final_price),
-        subcategoryName: product.subcategoryName || "N/A",  // ✅ Handle NULL values
-        categoryName: product.categoryName || "N/A" // ✅ Handle NULL values
+        subcategoryName: product.subcategoryName || "N/A",
+        categoryName: product.categoryName || "N/A"
     }));
 };
 
